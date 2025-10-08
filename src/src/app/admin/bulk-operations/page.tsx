@@ -3,9 +3,15 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Quiz {
+  id: string;
+  quiz_name: string;
+  exam_name: string;
+}
+
 export default function BulkOperationsPage() {
   const supabase = createClientComponentClient();
-  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState('');
   const [questionIds, setQuestionIds] = useState('');
   const [operation, setOperation] = useState('add');

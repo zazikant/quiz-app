@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useState } from 'react';
 
-export default function EditQuestionPage({ params }: { params: { id: string } }) {
-  const supabase = createClientComponentClient();
+import { addQuestion } from './actions';
+
+export default function AddQuestionPage() {
   const [questionText, setQuestionText] = useState('');
   const [answers, setAnswers] = useState([
     { text: '', isCorrect: true },
@@ -12,23 +12,6 @@ export default function EditQuestionPage({ params }: { params: { id: string } })
     { text: '', isCorrect: false },
     { text: '', isCorrect: false },
   ]);
-
-  useEffect(() => {
-    const fetchQuestion = async () => {
-      const { data: question } = await supabase
-        .from('questions')
-        .select('*, answers(*)')
-        .eq('id', params.id)
-        .single();
-
-      if (question) {
-        setQuestionText(question.question_text);
-        setAnswers(question.answers.map((a: any) => ({ text: a.answer_text, isCorrect: a.is_correct })));
-      }
-    };
-
-    fetchQuestion();
-  }, [params.id, supabase]);
 
   const handleAnswerChange = (index: number, text: string) => {
     const newAnswers = [...answers];
@@ -44,14 +27,12 @@ export default function EditQuestionPage({ params }: { params: { id: string } })
     setAnswers(newAnswers);
   };
 
-  const handleUpdate = async () => {
-    // Implement update logic here
-  };
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Question</h1>
-      <form onSubmit={handleUpdate}>
+      <h1 className="text-2xl font-bold mb-4">Add New Question</h1>
+      <form action={addQuestion}>
+        <input type="hidden" name="questionText" value={questionText} />
+        <input type="hidden" name="answers" value={JSON.stringify(answers)} />
         <div className="mb-4">
           <label htmlFor="question" className="block text-gray-700 font-bold mb-2">
             Question
@@ -88,7 +69,7 @@ export default function EditQuestionPage({ params }: { params: { id: string } })
           type="submit"
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
-          Update Question
+          Add Question
         </button>
       </form>
     </div>

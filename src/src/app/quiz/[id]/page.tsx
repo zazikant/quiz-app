@@ -3,10 +3,36 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Answer {
+  id: string;
+  answer_text: string;
+}
+
+interface QuestionData {
+  question_text: string;
+  answers: Answer[];
+}
+
+interface UserQuizProgress {
+  id: string;
+  answer_id: string | null;
+  questions: QuestionData;
+}
+
+interface QuizData {
+  quiz_questions: { count: number }[];
+}
+
+interface Assignment {
+  id: string;
+  current_question_index: number;
+  quizzes: QuizData;
+}
+
 export default function QuizPage({ params }: { params: { id: string } }) {
   const supabase = createClientComponentClient();
-  const [assignment, setAssignment] = useState<any>(null);
-  const [question, setQuestion] = useState<any>(null);
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [question, setQuestion] = useState<UserQuizProgress | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,20 +66,24 @@ export default function QuizPage({ params }: { params: { id: string } }) {
   }, [assignment, params.id, supabase]);
 
   const handleNext = async () => {
-    if (selectedAnswer) {
+    if (selectedAnswer && question) {
       await supabase.from('user_quiz_progress').update({ answer_id: selectedAnswer, is_answered: true }).eq('id', question.id);
     }
-    await supabase.from('quiz_assignments').update({ current_question_index: assignment.current_question_index + 1 }).eq('id', params.id);
+    if (assignment) {
+      await supabase.from('quiz_assignments').update({ current_question_index: assignment.current_question_index + 1 }).eq('id', params.id);
+    }
     window.location.reload();
   };
 
   const handlePrevious = async () => {
-    await supabase.from('quiz_assignments').update({ current_question_index: assignment.current_question_index - 1 }).eq('id', params.id);
+    if (assignment) {
+      await supabase.from('quiz_assignments').update({ current_question_index: assignment.current_question_index - 1 }).eq('id', params.id);
+    }
     window.location.reload();
   };
 
   const handleComplete = async () => {
-    if (selectedAnswer) {
+    if (selectedAnswer && question) {
       await supabase.from('user_quiz_progress').update({ answer_id: selectedAnswer, is_answered: true }).eq('id', question.id);
     }
     await supabase.from('quiz_assignments').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', params.id);
@@ -62,11 +92,11 @@ export default function QuizPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto p-4">
-      {question && (
+      {question && assignment && (
         <div>
           <h1 className="text-2xl font-bold mb-4">{question.questions.question_text}</h1>
           <div className="space-y-4">
-            {question.questions.answers.map((answer: any) => (
+            {question.questions.answers.map((answer: Answer) => (
               <div key={answer.id} className="flex items-center">
                 <input
                   type="radio"

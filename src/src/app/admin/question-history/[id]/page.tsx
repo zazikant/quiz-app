@@ -3,10 +3,26 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Question {
+  id: string;
+  question_text: string;
+}
+
+interface User {
+  email: string;
+}
+
+interface Attempt {
+  id: string;
+  is_correct: boolean;
+  attempted_at: string;
+  users: User;
+}
+
 export default function QuestionHistoryPage({ params }: { params: { id: string } }) {
   const supabase = createClientComponentClient();
-  const [question, setQuestion] = useState<any>(null);
-  const [attempts, setAttempts] = useState<any[]>([]);
+  const [question, setQuestion] = useState<Question | null>(null);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -34,7 +50,7 @@ export default function QuestionHistoryPage({ params }: { params: { id: string }
     <div className="container mx-auto p-4">
       {question && (
         <h1 className="text-2xl font-bold mb-4">
-          History for "{question.question_text}"
+          {`History for "${question.question_text}"`}
         </h1>
       )}
       <div className="bg-white shadow-md rounded my-6">
