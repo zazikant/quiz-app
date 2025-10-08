@@ -1,93 +1,100 @@
-'use client';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+export default async function AnalyticsPage() {
+  const supabase = createServerComponentClient({ cookies });
 
-interface DifficultyDistribution {
-  difficulty_level: 'easy' | 'medium' | 'tough';
-  count: number;
-}
+  const { data: stats, error } = await supabase.rpc('get_analytics');
 
-interface AnalyticsStats {
-  total_quizzes: number;
-  total_questions: number;
-  total_users: number;
-  difficulty_distribution: DifficultyDistribution[];
-}
+  if (error) {
+    console.error(error);
+    return <div>Error loading analytics.</div>;
+  }
 
-const DifficultyChart = ({ data }: { data: DifficultyDistribution[] }) => {
-  const maxCount = Math.max(...data.map(d => d.count), 0);
-  const chartHeight = 200;
-
-  const getBarColor = (level: string) => {
-    switch (level) {
-      case 'easy':
-        return 'bg-green-500';
-      case 'medium':
-        return 'bg-yellow-500';
-      case 'tough':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
+  const chartData = stats.difficulty_distribution;
+  const chartConfig = {
+    count: {
+      label: "Count",
+    },
+    easy: {
+      label: "Easy",
+      color: "hsl(var(--chart-1))",
+    },
+    medium: {
+      label: "Medium",
+      color: "hsl(var(--chart-2))",
+    },
+    tough: {
+      label: "Tough",
+      color: "hsl(var(--chart-3))",
+    },
   };
 
   return (
-    <div className="flex justify-around items-end h-64 p-4 border rounded-lg">
-      {data.map((item) => (
-        <div key={item.difficulty_level} className="flex flex-col items-center">
-          <div
-            className={`w-16 ${getBarColor(item.difficulty_level)}`}
-            style={{ height: `${(item.count / (maxCount || 1)) * chartHeight}px` }}
-          ></div>
-          <span className="mt-2 text-sm font-medium">{item.difficulty_level}</span>
-          <span className="text-xs text-gray-500">{item.count}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default function AnalyticsPage() {
-  const supabase = createClientComponentClient();
-  const [stats, setStats] = useState<AnalyticsStats | null>(null);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const { data, error } = await supabase.rpc('get_analytics');
-      if (error) {
-        console.error(error);
-      } else {
-        setStats(data);
-      }
-    };
-
-    fetchStats();
-  }, [supabase]);
-
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Analytics</h1>
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white shadow-md rounded p-4">
-            <h2 className="text-lg font-bold mb-2">Total Quizzes</h2>
-            <p className="text-3xl font-bold">{stats.total_quizzes}</p>
-          </div>
-          <div className="bg-white shadow-md rounded p-4">
-            <h2 className="text-lg font-bold mb-2">Total Questions</h2>
-            <p className="text-3xl font-bold">{stats.total_questions}</p>
-          </div>
-          <div className="bg-white shadow-md rounded p-4">
-            <h2 className="text-lg font-bold mb-2">Total Users</h2>
-            <p className="text-3xl font-bold">{stats.total_users}</p>
-          </div>
-          <div className="bg-white shadow-md rounded p-4 col-span-1 md:col-span-2 lg:col-span-3">
-            <h2 className="text-lg font-bold mb-2">Question Difficulty Distribution</h2>
-            {stats.difficulty_distribution && <DifficultyChart data={stats.difficulty_distribution} />}
-          </div>
-        </div>
-      )}
+    <div className="container mx-auto p-4 space-y-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total_quizzes}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Questions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total_questions}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total_users}</div>
+          </CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Question Difficulty Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <BarChart data={chartData}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="difficulty_level"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+              />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Bar dataKey="count" fill="var(--color-easy)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
     </div>
   );
 }

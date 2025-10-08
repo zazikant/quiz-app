@@ -1,152 +1,139 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { deleteUserAttempt } from './actions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Trash2 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
-interface User {
-  email: string;
-}
-
-interface Quiz {
-  exam_name: string;
-  quiz_name: string;
-}
-
-interface Result {
-  id: string;
-  is_correct: boolean;
-  attempted_at: string;
-  users: User;
-  quizzes: Quiz;
-}
-
-export default function ResultsPage({ searchParams }: { searchParams: { page: string, user: string, quiz: string, date: string } }) {
-  const supabase = createClientComponentClient();
-  const [results, setResults] = useState<Result[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
+export default async function ResultsPage({ searchParams }: { searchParams: { page: string, user: string, quiz: string, date: string } }) {
+  const supabase = createServerComponentClient({ cookies });
   const page = parseInt(searchParams.page || '1', 10);
+  const offset = (page - 1) * PAGE_SIZE;
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      const offset = (page - 1) * PAGE_SIZE;
+  let countQuery = supabase.from('user_attempts').select('count', { count: 'exact' });
+  let dataQuery = supabase.from('user_attempts').select('*, users(*), quizzes(*)');
 
-      let query = supabase
-        .from('user_attempts')
-        .select('*, users(*), quizzes(*)', { count: 'exact' });
+  if (searchParams.user) {
+    countQuery = countQuery.ilike('users.email', `%${searchParams.user}%`);
+    dataQuery = dataQuery.ilike('users.email', `%${searchParams.user}%`);
+  }
 
-      if (searchParams.user) {
-        query = query.ilike('users.email', `%${searchParams.user}%`);
-      }
+  if (searchParams.quiz) {
+    countQuery = countQuery.ilike('quizzes.exam_name', `%${searchParams.quiz}%`);
+    dataQuery = dataQuery.ilike('quizzes.exam_name', `%${searchParams.quiz}%`);
+  }
 
-      if (searchParams.quiz) {
-        query = query.ilike('quizzes.exam_name', `%${searchParams.quiz}%`);
-      }
+  if (searchParams.date) {
+    countQuery = countQuery.gte('attempted_at', new Date(searchParams.date).toISOString()).lte('attempted_at', new Date(searchParams.date).toISOString().replace('00:00:00', '23:59:59'));
+    dataQuery = dataQuery.gte('attempted_at', new Date(searchParams.date).toISOString()).lte('attempted_at', new Date(searchParams.date).toISOString().replace('00:00:00', '23:59:59'));
+  }
 
-      if (searchParams.date) {
-        query = query.gte('attempted_at', new Date(searchParams.date).toISOString()).lte('attempted_at', new Date(searchParams.date).toISOString().replace('00:00:00', '23:59:59'));
-      }
+  const { data: results } = await dataQuery.range(offset, offset + PAGE_SIZE - 1);
+  const { data: count } = await countQuery;
 
-      const { data, count } = await query.range(offset, offset + PAGE_SIZE - 1);
-
-      setResults(data || []);
-      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
-    };
-
-    fetchResults();
-  }, [page, supabase, searchParams]);
+  const totalPages = Math.ceil((count?.[0]?.count || 0) / PAGE_SIZE);
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4">
-        <form>
-          <div className="flex items-center">
-            <input
-              type="text"
-              name="user"
-              defaultValue={searchParams.user}
-              placeholder="Filter by user..."
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-            <input
-              type="text"
-              name="quiz"
-              defaultValue={searchParams.quiz}
-              placeholder="Filter by quiz..."
-              className="ml-4 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-            <input
-              type="date"
-              name="date"
-              defaultValue={searchParams.date}
-              className="ml-4 shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-            <button type="submit" className="ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-              Filter
-            </button>
+    <div className="container mx-auto p-4 space-y-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter Results</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form>
+            <div className="flex items-center gap-4">
+              <Input
+                type="text"
+                name="user"
+                defaultValue={searchParams.user}
+                placeholder="Filter by user..."
+                className="w-full"
+              />
+              <Input
+                type="text"
+                name="quiz"
+                defaultValue={searchParams.quiz}
+                placeholder="Filter by quiz..."
+                className="w-full"
+              />
+              <Input
+                type="date"
+                name="date"
+                defaultValue={searchParams.date}
+                className="w-full"
+              />
+              <Button type="submit">Filter</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>All Results</CardTitle>
+            <Button asChild variant="outline">
+              <a href="/api/admin/results/export" download>📥 Download Excel</a>
+            </Button>
           </div>
-        </form>
-      </div>
-      <div className="bg-white shadow-md rounded my-6">
-        <table className="min-w-full table-auto">
-          <thead>
-            <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left">User</th>
-              <th className="py-3 px-6 text-left">Quiz</th>
-              <th className="py-3 px-6 text-center">Score</th>
-              <th className="py-3 px-6 text-center">Date</th>
-              <th className="py-3 px-6 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {results.map((result) => (
-              <tr key={result.id} className="border-b border-gray-200 hover:bg-gray-100">
-                <td className="py-3 px-6 text-left whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="font-medium">{result.users.email}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-6 text-left">
-                  {result.quizzes.exam_name} - {result.quizzes.quiz_name}
-                </td>
-                <td className="py-3 px-6 text-center">{result.is_correct ? 'Correct' : 'Incorrect'}</td>
-                <td className="py-3 px-6 text-center">{new Date(result.attempted_at).toLocaleDateString()}</td>
-                <td className="py-3 px-6 text-center">
-                  <div className="flex item-center justify-center">
-                    <button
-                      onClick={() => deleteUserAttempt(result.id)}
-                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="flex justify-between items-center">
-        <div>
-          <Link href={`?page=${page - 1}`} className={`mx-1 px-3 py-1 rounded ${page <= 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
-            Previous
-          </Link>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <Link key={p} href={`?page=${p}`} className={`mx-1 px-3 py-1 rounded ${p === page ? 'bg-blue-700 text-white' : 'bg-blue-500'}`}>
-              {p}
-            </Link>
-          ))}
-          <Link href={`?page=${page + 1}`} className={`mx-1 px-3 py-1 rounded ${page >= totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
-            Next
-          </Link>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Quiz</TableHead>
+                <TableHead className="text-center">Score</TableHead>
+                <TableHead className="text-center">Date</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {results?.map((result) => (
+                <TableRow key={result.id}>
+                  <TableCell className="font-medium">{result.users.email}</TableCell>
+                  <TableCell>{result.quizzes.exam_name} - {result.quizzes.quiz_name}</TableCell>
+                  <TableCell className="text-center">{result.is_correct ? 'Correct' : 'Incorrect'}</TableCell>
+                  <TableCell className="text-center">{new Date(result.attempted_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-center">
+                    <form action={deleteUserAttempt}>
+                      <input type="hidden" name="id" value={result.id} />
+                      <Button variant="ghost" size="icon" type="submit">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </form>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+        <div className="p-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious href={`?page=${page - 1}&user=${searchParams.user || ''}&quiz=${searchParams.quiz || ''}&date=${searchParams.date || ''}`} />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink href={`?page=${p}&user=${searchParams.user || ''}&quiz=${searchParams.quiz || ''}&date=${searchParams.date || ''}`} isActive={p === page}>
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext href={`?page=${page + 1}&user=${searchParams.user || ''}&quiz=${searchParams.quiz || ''}&date=${searchParams.date || ''}`} />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
-        <a href="/api/admin/results/export" download className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          📥 Download Excel
-        </a>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,19 +1,27 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Edit, Trash2 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
-const getDifficultyClass = (difficulty: string) => {
+const getDifficultyVariant = (difficulty: string): "default" | "secondary" | "destructive" | "outline" => {
   switch (difficulty) {
     case 'easy':
-      return 'bg-green-200 text-green-600';
+      return 'default';
     case 'medium':
-      return 'bg-yellow-200 text-yellow-600';
+      return 'secondary';
     case 'tough':
-      return 'bg-red-200 text-red-600';
+      return 'destructive';
     default:
-      return 'bg-gray-200 text-gray-600';
+      return 'outline';
   }
 };
 
@@ -41,93 +49,100 @@ export default async function QuestionBankPage({ searchParams }: { searchParams:
   const totalPages = Math.ceil((count?.[0]?.count || 0) / PAGE_SIZE);
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Question Bank</h1>
-        <Link href="/admin/question-bank/add" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          + Add Question
-        </Link>
-      </div>
-      <div className="mb-4">
-        <form>
-          <div className="flex items-center">
-            <input
-              type="text"
-              name="q"
-              defaultValue={searchParams.q}
-              placeholder="Search questions..."
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-            <select name="difficulty" defaultValue={searchParams.difficulty} className="ml-4 shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <option value="">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="tough">Tough</option>
-            </select>
-            <button type="submit" className="ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-              Search
-            </button>
-          </div>
-        </form>
-      </div>
-      <div className="bg-white shadow-md rounded my-6">
-        <table className="min-w-full table-auto">
-          <thead>
-            <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left">Question</th>
-              <th className="py-3 px-6 text-left">Difficulty</th>
-              <th className="py-3 px-6 text-center">Attempts</th>
-              <th className="py-3 px-6 text-center">Correct</th>
-              <th className="py-3 px-6 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-600 text-sm font-light">
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Question Bank</CardTitle>
+          <Button asChild>
+            <Link href="/admin/question-bank/add">+ Add Question</Link>
+          </Button>
+        </div>
+        <div className="mt-4">
+          <form>
+            <div className="flex items-center gap-4">
+              <Input
+                type="text"
+                name="q"
+                defaultValue={searchParams.q}
+                placeholder="Search questions..."
+                className="w-full"
+              />
+              <Select name="difficulty" defaultValue={searchParams.difficulty}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Difficulties" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Difficulties</SelectItem>
+                  <SelectItem value="easy">Easy</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="tough">Tough</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button type="submit">Search</Button>
+            </div>
+          </form>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Question</TableHead>
+              <TableHead>Difficulty</TableHead>
+              <TableHead className="text-center">Attempts</TableHead>
+              <TableHead className="text-center">Correct</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {questions?.map((question) => (
-              <tr key={question.id} className="border-b border-gray-200 hover:bg-gray-100">
-                <td className="py-3 px-6 text-left whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="font-medium">{question.question_text}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-6 text-left">
-                  <span className={`${getDifficultyClass(question.difficulty_level)} py-1 px-3 rounded-full text-xs`}>
+              <TableRow key={question.id}>
+                <TableCell className="font-medium">{question.question_text}</TableCell>
+                <TableCell>
+                  <Badge variant={getDifficultyVariant(question.difficulty_level)}>
                     {question.difficulty_level}
-                  </span>
-                </td>
-                <td className="py-3 px-6 text-center">{question.total_attempts}</td>
-                <td className="py-3 px-6 text-center">{question.correct_attempts}</td>
-                <td className="py-3 px-6 text-center">
-                  <div className="flex item-center justify-center">
-                    <Link href={`/admin/question-bank/edit/${question.id}`} className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
-                    </svg>
-                    </Link>
-                    <Link href={`/admin/question-bank/delete/${question.id}`} className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </Link>
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">{question.total_attempts}</TableCell>
+                <TableCell className="text-center">{question.correct_attempts}</TableCell>
+                <TableCell className="text-center">
+                  <div className="flex item-center justify-center gap-2">
+                    <Button asChild variant="ghost" size="icon">
+                      <Link href={`/admin/question-bank/edit/${question.id}`}>
+                        <Edit className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost" size="icon">
+                      <Link href={`/admin/question-bank/delete/${question.id}`}>
+                        <Trash2 className="h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
+      </CardContent>
+      <div className="p-4">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href={`?page=${page - 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <PaginationItem key={p}>
+                <PaginationLink href={`?page=${p}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} isActive={p === page}>
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext href={`?page=${page + 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
-      <div className="flex justify-center">
-        <Link href={`?page=${page - 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} className={`mx-1 px-3 py-1 rounded ${page <= 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
-          Previous
-        </Link>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <Link key={p} href={`?page=${p}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} className={`mx-1 px-3 py-1 rounded ${p === page ? 'bg-blue-700 text-white' : 'bg-blue-500'}`}>
-            {p}
-          </Link>
-        ))}
-        <Link href={`?page=${page + 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} className={`mx-1 px-3 py-1 rounded ${page >= totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
-          Next
-        </Link>
-      </div>
-    </div>
+    </Card>
   );
 }

@@ -1,8 +1,30 @@
-'use server';
-
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+
+export async function assignQuiz(formData: FormData) {
+  const supabase = createServerActionClient({ cookies });
+  const email = formData.get('email') as string;
+  const quizId = formData.get('quiz_id') as string;
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'User not logged in' };
+  }
+
+  const { error } = await supabase.from('quiz_assignments').insert({
+    user_email: email,
+    quiz_id: quizId,
+    assigned_by: user.id,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/admin/assignments');
+}
 
 export async function allowResume(_assignmentId: string) {
   // No changes needed for allow resume, as the user can just continue

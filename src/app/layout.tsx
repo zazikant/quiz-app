@@ -17,9 +17,11 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-background text-foreground`}>
         <Header />
-        <main>{children}</main>
+        <main className="flex-1 flex flex-col items-center py-12 px-4">
+          {children}
+        </main>
       </body>
     </html>
   );
