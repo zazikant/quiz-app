@@ -226,6 +226,35 @@ $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION get_assignment_progress IS 'Get detailed progress statistics for an assignment';
 
+CREATE OR REPLACE FUNCTION get_analytics()
+RETURNS json AS $$
+DECLARE
+  total_quizzes int;
+  total_questions int;
+  total_users int;
+  difficulty_distribution json;
+BEGIN
+  SELECT count(*) INTO total_quizzes FROM quizzes;
+  SELECT count(*) INTO total_questions FROM questions;
+  SELECT count(*) INTO total_users FROM auth.users;
+
+  SELECT json_agg(t) INTO difficulty_distribution FROM (
+    SELECT difficulty_level, count(*) as count
+    FROM questions
+    GROUP BY difficulty_level
+  ) t;
+
+  RETURN json_build_object(
+    'total_quizzes', total_quizzes,
+    'total_questions', total_questions,
+    'total_users', total_users,
+    'difficulty_distribution', difficulty_distribution
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION get_analytics IS 'Get overall analytics for the quiz app';
+
 -- RLS Policies
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE answers ENABLE ROW LEVEL SECURITY;
