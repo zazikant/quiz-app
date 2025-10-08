@@ -20,6 +20,11 @@ export async function addQuestion(formData: FormData) {
 
   const supabase = createServerActionClient({ cookies });
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return redirect('/');
+  }
+
   // Check for duplicate question
   const { data: existingQuestions } = await supabase
     .from('questions')
@@ -52,7 +57,7 @@ export async function addQuestion(formData: FormData) {
     // Create new question
     const { data: question, error: questionError } = await supabase
       .from('questions')
-      .insert({ question_text: questionText })
+      .insert({ question_text: questionText, admin_id: user.id })
       .select()
       .single();
 
