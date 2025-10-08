@@ -3,6 +3,7 @@
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 interface NewAnswer {
   text: string;
@@ -45,8 +46,7 @@ export async function addQuestion(formData: FormData) {
         .update({ is_deleted: false })
         .eq('id', exactMatch.id);
     } else {
-      // Question already exists and is active
-      return { error: 'Question already exists' };
+      // Question already exists and is active, do nothing
     }
   } else {
     // Create new question
@@ -75,4 +75,5 @@ export async function addQuestion(formData: FormData) {
   }
 
   revalidatePath('/admin/question-bank');
+  redirect('/admin/question-bank');
 }
