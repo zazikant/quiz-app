@@ -129,18 +129,23 @@ export default function ResultsPage({ searchParams }: { searchParams: { page: st
           </tbody>
         </table>
       </div>
-      <div className="flex justify-center">
-        <Link href={`?page=${page - 1}`} className={`mx-1 px-3 py-1 rounded ${page <= 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
-          Previous
-        </Link>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <Link key={p} href={`?page=${p}`} className={`mx-1 px-3 py-1 rounded ${p === page ? 'bg-blue-700 text-white' : 'bg-blue-500'}`}>
-            {p}
+      <div className="flex justify-between items-center">
+        <div>
+          <Link href={`?page=${page - 1}`} className={`mx-1 px-3 py-1 rounded ${page <= 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
+            Previous
           </Link>
-        ))}
-        <Link href={`?page=${page + 1}`} className={`mx-1 px-3 py-1 rounded ${page >= totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
-          Next
-        </Link>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <Link key={p} href={`?page=${p}`} className={`mx-1 px-3 py-1 rounded ${p === page ? 'bg-blue-700 text-white' : 'bg-blue-500'}`}>
+              {p}
+            </Link>
+          ))}
+          <Link href={`?page=${page + 1}`} className={`mx-1 px-3 py-1 rounded ${page >= totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white'}`}>
+            Next
+          </Link>
+        </div>
+        <a href="/api/admin/results/export" download className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          📥 Download Excel
+        </a>
       </div>
     </div>
   );

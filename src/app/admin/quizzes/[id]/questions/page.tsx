@@ -54,7 +54,10 @@ export default function QuizQuestionsPage({ params }: { params: { id: string } }
     if (error) {
       alert('Error adding question');
     } else {
-      // Refresh quiz questions
+      const questionToAdd = allQuestions.find((q) => q.id === questionId);
+      if (questionToAdd) {
+        setQuizQuestions([...quizQuestions, questionToAdd]);
+      }
     }
   };
 
@@ -68,7 +71,7 @@ export default function QuizQuestionsPage({ params }: { params: { id: string } }
     if (error) {
       alert('Error removing question');
     } else {
-      // Refresh quiz questions
+      setQuizQuestions(quizQuestions.filter((q) => q.id !== questionId));
     }
   };
 

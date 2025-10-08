@@ -6,10 +6,15 @@ import { revalidatePath } from 'next/cache';
 
 export async function deleteUserAttempt(attemptId: string) {
   const supabase = createServerActionClient({ cookies });
-  const { error } = await supabase.from('user_attempts').delete().eq('id', attemptId);
+
+  const { error } = await supabase
+    .from('user_attempts')
+    .delete()
+    .eq('id', attemptId);
 
   if (error) {
-    return { error: error.message };
+    console.error('Error deleting user attempt:', error);
+    return;
   }
 
   revalidatePath('/admin/results');
