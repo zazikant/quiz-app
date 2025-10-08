@@ -4,9 +4,18 @@ import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
+interface NewAnswer {
+  text: string;
+  isCorrect: boolean;
+}
+
+interface ExistingAnswer {
+  answer_text: string;
+}
+
 export async function addQuestion(formData: FormData) {
   const questionText = formData.get('questionText') as string;
-  const answers = JSON.parse(formData.get('answers') as string);
+  const answers: NewAnswer[] = JSON.parse(formData.get('answers') as string);
 
   const supabase = createServerActionClient({ cookies });
 
@@ -16,7 +25,7 @@ export async function addQuestion(formData: FormData) {
     .select('id, is_deleted, answers(answer_text)')
     .ilike('question_text', questionText);
 
-  const answersMatch = (newAnswers: any[], existingAnswers: any[]) => {
+  const answersMatch = (newAnswers: NewAnswer[], existingAnswers: ExistingAnswer[]) => {
     if (newAnswers.length !== existingAnswers.length) return false;
 
     const sortedNew = newAnswers.map((a) => a.text.toLowerCase()).sort();
@@ -52,7 +61,7 @@ export async function addQuestion(formData: FormData) {
       return;
     }
 
-    const answerInserts = answers.map((answer: any) => ({
+    const answerInserts = answers.map((answer: NewAnswer) => ({
       question_id: question.id,
       answer_text: answer.text,
       is_correct: answer.isCorrect,

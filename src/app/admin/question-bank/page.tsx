@@ -35,7 +35,7 @@ export default async function QuestionBankPage({ searchParams }: { searchParams:
     dataQuery = dataQuery.eq('difficulty_level', searchParams.difficulty);
   }
 
-  const { data: questions, error } = await dataQuery.range(offset, offset + PAGE_SIZE - 1);
+  const { data: questions } = await dataQuery.range(offset, offset + PAGE_SIZE - 1);
   const { data: count } = await countQuery;
 
   const totalPages = Math.ceil((count?.[0]?.count || 0) / PAGE_SIZE);

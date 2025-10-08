@@ -4,10 +4,22 @@ import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 
+interface Question {
+  id: string;
+  question_text: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  total_attempts: number;
+  correct_attempts: number;
+  difficulty_level: 'easy' | 'medium' | 'tough';
+  admin_id: string;
+}
+
 export default function DeleteQuestionPage({ params }: { params: { id: string } }) {
   const supabase = createClientComponentClient();
   const router = useRouter();
-  const [question, setQuestion] = useState<any>(null);
+  const [question, setQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
     const fetchQuestion = async () => {

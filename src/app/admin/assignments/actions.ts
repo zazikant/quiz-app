@@ -4,7 +4,7 @@ import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-export async function allowResume(assignmentId: string) {
+export async function allowResume(_assignmentId: string) {
   // No changes needed for allow resume, as the user can just continue
   // from where they left off.
 }

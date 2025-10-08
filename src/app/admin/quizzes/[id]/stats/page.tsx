@@ -3,10 +3,22 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Quiz {
+  id: string;
+  exam_name: string;
+  quiz_name: string;
+}
+
+interface QuizStats {
+  total_attempts: number;
+  correct_attempts: number;
+  success_rate: number;
+}
+
 export default function QuizStatsPage({ params }: { params: { id: string } }) {
   const supabase = createClientComponentClient();
-  const [quiz, setQuiz] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [stats, setStats] = useState<QuizStats | null>(null);
 
   useEffect(() => {
     const fetchQuiz = async () => {

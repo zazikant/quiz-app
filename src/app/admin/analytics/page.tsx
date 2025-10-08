@@ -3,9 +3,15 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface AnalyticsStats {
+  total_quizzes: number;
+  total_questions: number;
+  total_users: number;
+}
+
 export default function AnalyticsPage() {
   const supabase = createClientComponentClient();
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
