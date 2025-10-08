@@ -22,3 +22,9 @@ export async function login(formData: FormData) {
 
   redirect('/dashboard');
 }
+
+export async function logout() {
+  const supabase = createServerActionClient({ cookies });
+  await supabase.auth.signOut();
+  redirect('/');
+}
