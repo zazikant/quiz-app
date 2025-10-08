@@ -3,11 +3,27 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Question {
+  id: string;
+  question_text: string;
+}
+
+interface QuizQuestion {
+  questions: Question;
+}
+
+interface Quiz {
+  id: string;
+  exam_name: string;
+  quiz_name: string;
+  quiz_questions: QuizQuestion[];
+}
+
 export default function QuizQuestionsPage({ params }: { params: { id: string } }) {
   const supabase = createClientComponentClient();
-  const [quiz, setQuiz] = useState<any>(null);
-  const [allQuestions, setAllQuestions] = useState<any[]>([]);
-  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -17,7 +33,7 @@ export default function QuizQuestionsPage({ params }: { params: { id: string } }
         .eq('id', params.id)
         .single();
       setQuiz(data);
-      setQuizQuestions(data?.quiz_questions.map((qq: any) => qq.questions) || []);
+      setQuizQuestions(data?.quiz_questions.map((qq: QuizQuestion) => qq.questions) || []);
     };
 
     const fetchAllQuestions = async () => {

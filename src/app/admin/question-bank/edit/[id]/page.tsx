@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+interface Answer {
+  answer_text: string;
+  is_correct: boolean;
+}
+
 export default function EditQuestionPage({ params }: { params: { id: string } }) {
   const supabase = createClientComponentClient();
   const [questionText, setQuestionText] = useState('');
@@ -23,7 +28,7 @@ export default function EditQuestionPage({ params }: { params: { id: string } })
 
       if (question) {
         setQuestionText(question.question_text);
-        setAnswers(question.answers.map((a: any) => ({ text: a.answer_text, isCorrect: a.is_correct })));
+        setAnswers(question.answers.map((a: Answer) => ({ text: a.answer_text, isCorrect: a.is_correct })));
       }
     };
 

@@ -2,12 +2,31 @@
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import Link from 'next/link';
+import { deleteUserAttempt } from './actions';
 
 const PAGE_SIZE = 10;
 
+interface User {
+  email: string;
+}
+
+interface Quiz {
+  exam_name: string;
+  quiz_name: string;
+}
+
+interface Result {
+  id: string;
+  is_correct: boolean;
+  attempted_at: string;
+  users: User;
+  quizzes: Quiz;
+}
+
 export default function ResultsPage({ searchParams }: { searchParams: { page: string, user: string, quiz: string, date: string } }) {
   const supabase = createClientComponentClient();
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const page = parseInt(searchParams.page || '1', 10);
 
@@ -95,10 +114,6 @@ export default function ResultsPage({ searchParams }: { searchParams: { page: st
                 </td>
                 <td className="py-3 px-6 text-center">{result.is_correct ? 'Correct' : 'Incorrect'}</td>
                 <td className="py-3 px-6 text-center">{new Date(result.attempted_at).toLocaleDateString()}</td>
-import { deleteUserAttempt } from './actions';
-
-// ... (rest of the component)
-
                 <td className="py-3 px-6 text-center">
                   <div className="flex item-center justify-center">
                     <button

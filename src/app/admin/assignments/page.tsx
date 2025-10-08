@@ -2,11 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { allowResume, freshReassign } from './actions';
+
+interface Quiz {
+  id: string;
+  quiz_name: string;
+  exam_name: string;
+}
+
+interface Assignment {
+  id: string;
+  user_email: string;
+  status: string;
+  quizzes: Quiz;
+}
 
 export default function AssignmentsPage() {
   const supabase = createClientComponentClient();
-  const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [userEmail, setUserEmail] = useState('');
   const [selectedQuiz, setSelectedQuiz] = useState('');
 
