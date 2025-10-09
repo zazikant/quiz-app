@@ -28,5 +28,5 @@ export default async function QuizPage({ params }: { params: { id: string } }) {
     .eq('assignment_id', params.id)
     .order('question_order', { ascending: true });
 
-  return <Quiz assignment={assignment} questions={questions} />;
+  return <Quiz assignment={assignment} questions={questions || []} />;
 }

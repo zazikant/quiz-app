@@ -3,47 +3,16 @@ import { cookies } from 'next/headers';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 export default async function AnalyticsPage() {
   const supabase = createServerComponentClient({ cookies });
 
-  const { data: stats, error } = await supabase.rpc('get_analytics');
-
-  if (error) {
-    console.error(error);
-    return <div>Error loading analytics.</div>;
-  }
-
-  const chartData = stats.difficulty_distribution;
-  const chartConfig = {
-    count: {
-      label: "Count",
-    },
-    easy: {
-      label: "Easy",
-      color: "hsl(var(--chart-1))",
-    },
-    medium: {
-      label: "Medium",
-      color: "hsl(var(--chart-2))",
-    },
-    tough: {
-      label: "Tough",
-      color: "hsl(var(--chart-3))",
-    },
-  };
+  const { data: quizzes } = await supabase.from('quizzes').select('count');
+  const { data: questions } = await supabase.from('questions').select('count');
+  const { data: users } = await supabase.from('users').select('count');
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -53,7 +22,7 @@ export default async function AnalyticsPage() {
             <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total_quizzes}</div>
+            <div className="text-2xl font-bold">{quizzes?.[0].count}</div>
           </CardContent>
         </Card>
         <Card>
@@ -61,7 +30,7 @@ export default async function AnalyticsPage() {
             <CardTitle className="text-sm font-medium">Total Questions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total_questions}</div>
+            <div className="text-2xl font-bold">{questions?.[0].count}</div>
           </CardContent>
         </Card>
         <Card>
@@ -69,32 +38,10 @@ export default async function AnalyticsPage() {
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total_users}</div>
+            <div className="text-2xl font-bold">{users?.[0].count}</div>
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Question Difficulty Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-            <BarChart data={chartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="difficulty_level"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-              />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="count" fill="var(--color-easy)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
     </div>
   );
 }

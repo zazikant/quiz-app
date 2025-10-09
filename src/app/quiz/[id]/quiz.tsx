@@ -9,7 +9,30 @@ import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { updateProgress, updateAssignmentIndex, completeQuiz } from './actions';
 
-export function Quiz({ assignment, questions }) {
+interface Answer {
+  id: string;
+  answer_text: string;
+  is_correct: boolean;
+}
+
+interface Question {
+  id: string;
+  question_text: string;
+  answers: Answer[];
+}
+
+interface UserQuizProgress {
+  id: string;
+  answer_id: string;
+  questions: Question;
+}
+
+interface QuizAssignment {
+  id: string;
+  current_question_index: number;
+}
+
+export function Quiz({ assignment, questions }: { assignment: QuizAssignment, questions: UserQuizProgress[] }) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(assignment.current_question_index);
   const [selectedAnswer, setSelectedAnswer] = useState(questions[currentIndex]?.answer_id);

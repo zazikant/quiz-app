@@ -1,6 +1,7 @@
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function assignQuiz(formData: FormData) {
   const supabase = createServerActionClient({ cookies });
@@ -10,7 +11,7 @@ export async function assignQuiz(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'User not logged in' };
+    redirect('/');
   }
 
   const { error } = await supabase.from('quiz_assignments').insert({
@@ -20,10 +21,11 @@ export async function assignQuiz(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    console.error(error);
   }
 
   revalidatePath('/admin/assignments');
+  redirect('/admin/assignments');
 }
 
 export async function allowResume(_assignmentId: string) {
@@ -41,7 +43,7 @@ export async function freshReassign(assignmentId: string) {
     .single();
 
   if (!oldAssignment) {
-    return { error: 'Assignment not found' };
+    return;
   }
 
   await supabase.from('user_quiz_progress').delete().eq('assignment_id', assignmentId);
@@ -58,7 +60,8 @@ export async function freshReassign(assignmentId: string) {
     .single();
 
   if (newAssignmentError) {
-    return { error: newAssignmentError.message };
+    console.error(newAssignmentError);
+    return;
   }
 
   const { data: quizQuestions } = await supabase
