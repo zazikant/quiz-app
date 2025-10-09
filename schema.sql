@@ -387,3 +387,51 @@ CREATE POLICY "admins_manage_attempts" ON user_attempts
       AND auth.users.raw_user_meta_data->>'role' = 'admin'
     )
   );
+
+CREATE OR REPLACE FUNCTION search_questions(
+  p_search_term TEXT,
+  p_difficulty_filter TEXT,
+  p_page INT,
+  p_limit INT
+)
+RETURNS TABLE (
+  id UUID,
+  question_text TEXT,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ,
+  is_deleted BOOLEAN,
+  total_attempts INT,
+  correct_attempts INT,
+  difficulty_level TEXT,
+  admin_id UUID,
+  total_count BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH filtered_questions AS (
+    SELECT
+      q.*,
+      COUNT(*) OVER() as total_count
+    FROM questions q
+    WHERE
+      (p_search_term IS NULL OR q.question_text ILIKE '%' || p_search_term || '%') AND
+      (p_difficulty_filter = 'all' OR q.difficulty_level = p_difficulty_filter) AND
+      q.is_deleted = false
+  )
+  SELECT
+    fq.id,
+    fq.question_text,
+    fq.created_at,
+    fq.updated_at,
+    fq.is_deleted,
+    fq.total_attempts,
+    fq.correct_attempts,
+    fq.difficulty_level,
+    fq.admin_id,
+    fq.total_count
+  FROM filtered_questions fq
+  ORDER BY fq.created_at DESC
+  LIMIT p_limit
+  OFFSET (p_page - 1) * p_limit;
+END;
+$$ LANGUAGE plpgsql;
