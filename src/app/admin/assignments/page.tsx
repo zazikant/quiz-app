@@ -58,7 +58,7 @@ export default async function AssignmentsPage() {
               <SelectContent>
                 {quizzes?.map((quiz) => (
                   <SelectItem key={quiz.id} value={quiz.id}>
-                    {quiz.exam_name} - {quiz.quiz_name}
+                    {quiz.exam_name || 'Unnamed Exam'} - {quiz.quiz_name || 'Unnamed Quiz'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -85,10 +85,10 @@ export default async function AssignmentsPage() {
             <TableBody>
               {assignmentsWithQuizzes?.map((assignment) => (
                 <TableRow key={assignment.id}>
-                  <TableCell className="font-medium">{assignment.user_email}</TableCell>
+                  <TableCell className="font-medium">{assignment.user_email || 'No Email'}</TableCell>
                   <TableCell>{assignment.quizzes ? `${assignment.quizzes.exam_name} - ${assignment.quizzes.quiz_name}` : 'Quiz not found'}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={getStatusVariant(assignment.status)}>{assignment.status}</Badge>
+                    <Badge variant={getStatusVariant(assignment.status)}>{assignment.status || 'No Status'}</Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <form className="flex item-center justify-center gap-2">
