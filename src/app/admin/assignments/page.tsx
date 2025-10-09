@@ -82,7 +82,7 @@ export default async function AssignmentsPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <form className="flex item-center justify-center gap-2">
-                      <Button formAction={() => allowResume(assignment.id)} variant="outline" size="sm">Allow Resume</Button>
+                      <Button formAction={() => allowResume()} variant="outline" size="sm">Allow Resume</Button>
                       <Button formAction={() => freshReassign(assignment.id)} variant="outline" size="sm">Fresh Reassign</Button>
                     </form>
                   </TableCell>

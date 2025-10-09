@@ -27,7 +27,7 @@ export async function assignQuiz(formData: FormData) {
   redirect('/admin/assignments');
 }
 
-export async function allowResume(_assignmentId: string) {
+export async function allowResume() {
   // No changes needed for allow resume, as the user can just continue
   // from where they left off.
 }
