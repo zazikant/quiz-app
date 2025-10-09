@@ -11,7 +11,25 @@ export async function assignQuiz(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/');
+    return redirect('/');
+  }
+
+  // Check if an active assignment already exists
+  const { data: existingAssignment, error: existingError } = await supabase
+    .from('quiz_assignments')
+    .select('id')
+    .eq('user_email', email)
+    .eq('quiz_id', quizId)
+    .in('status', ['assigned', 'in_progress'])
+    .maybeSingle();
+
+  if (existingError) {
+    console.error(existingError);
+    return redirect('/admin/assignments?error=server_error');
+  }
+
+  if (existingAssignment) {
+    return redirect('/admin/assignments?error=duplicate');
   }
 
   const { error } = await supabase.from('quiz_assignments').insert({
@@ -22,10 +40,11 @@ export async function assignQuiz(formData: FormData) {
 
   if (error) {
     console.error(error);
+    return redirect('/admin/assignments?error=server_error');
   }
 
   revalidatePath('/admin/assignments');
-  redirect('/admin/assignments');
+  redirect('/admin/assignments?success=true');
 }
 
 export async function allowResume() {

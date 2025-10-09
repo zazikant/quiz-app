@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
-export default async function AssignmentsPage() {
+export default async function AssignmentsPage({ searchParams }: { searchParams: { error: string, success: string } }) {
   const supabase = await createClient();
 
   const { data: quizzesData } = await supabase.from('quizzes').select('*');
@@ -38,6 +38,18 @@ export default async function AssignmentsPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      {searchParams.error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error:</strong>
+          <span className="block sm:inline"> {searchParams.error === 'duplicate' ? 'This quiz is already assigned to this user.' : 'An unknown error occurred.'}</span>
+        </div>
+      )}
+      {searchParams.success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Success!</strong>
+          <span className="block sm:inline"> The quiz has been assigned.</span>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Assign Quiz</CardTitle>
