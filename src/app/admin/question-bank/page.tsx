@@ -1,5 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +25,7 @@ const getDifficultyVariant = (difficulty: string): "default" | "secondary" | "de
 };
 
 export default async function QuestionBankPage({ searchParams }: { searchParams: { q: string, difficulty: string, page: string } }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createClient();
   const page = parseInt(searchParams.page || '1', 10);
   const offset = (page - 1) * PAGE_SIZE;
 

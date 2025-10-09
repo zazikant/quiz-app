@@ -1,10 +1,9 @@
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function assignQuiz(formData: FormData) {
-  const supabase = createServerActionClient({ cookies });
+  const supabase = await createClient();
   const email = formData.get('email') as string;
   const quizId = formData.get('quiz_id') as string;
 
@@ -34,7 +33,7 @@ export async function allowResume(_assignmentId: string) {
 }
 
 export async function freshReassign(assignmentId: string) {
-  const supabase = createServerActionClient({ cookies });
+  const supabase = await createClient();
 
   const { data: oldAssignment } = await supabase
     .from('quiz_assignments')
