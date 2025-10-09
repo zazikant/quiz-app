@@ -37,7 +37,7 @@ export default async function QuestionBankPage({ searchParams }: { searchParams:
     dataQuery = dataQuery.ilike('question_text', `%${searchParams.q}%`);
   }
 
-  if (searchParams.difficulty) {
+  if (searchParams.difficulty && searchParams.difficulty !== 'all') {
     countQuery = countQuery.eq('difficulty_level', searchParams.difficulty);
     dataQuery = dataQuery.eq('difficulty_level', searchParams.difficulty);
   }
@@ -71,7 +71,7 @@ export default async function QuestionBankPage({ searchParams }: { searchParams:
                   <SelectValue placeholder="All Difficulties" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Difficulties</SelectItem>
+                  <SelectItem value="all">All Difficulties</SelectItem>
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="tough">Tough</SelectItem>
@@ -94,7 +94,7 @@ export default async function QuestionBankPage({ searchParams }: { searchParams:
             </TableRow>
           </TableHeader>
           <TableBody>
-            {questions?.map((question) => (
+            {Array.isArray(questions) && questions.map((question) => (
               <TableRow key={question.id}>
                 <TableCell className="font-medium">{question.question_text}</TableCell>
                 <TableCell>
@@ -123,25 +123,27 @@ export default async function QuestionBankPage({ searchParams }: { searchParams:
           </TableBody>
         </Table>
       </CardContent>
-      <div className="p-4">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href={`?page=${page - 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <PaginationItem key={p}>
-                <PaginationLink href={`?page=${p}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} isActive={p === page}>
-                  {p}
-                </PaginationLink>
+      {Number.isFinite(totalPages) && totalPages > 0 && (
+        <div className="p-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious href={`?page=${page - 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} />
               </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext href={`?page=${page + 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink href={`?page=${p}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} isActive={p === page}>
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext href={`?page=${page + 1}&q=${searchParams.q || ''}&difficulty=${searchParams.difficulty || ''}`} />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </Card>
   );
 }

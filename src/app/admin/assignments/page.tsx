@@ -10,8 +10,18 @@ import { Badge } from '@/components/ui/badge';
 export default async function AssignmentsPage() {
   const supabase = await createClient();
 
-  const { data: quizzes } = await supabase.from('quizzes').select('*');
-  const { data: assignments } = await supabase.from('quiz_assignments').select('*, quizzes(*)');
+  const { data: quizzesData } = await supabase.from('quizzes').select('*');
+  const { data: assignmentsData } = await supabase.from('quiz_assignments').select('*');
+
+  const quizzes = quizzesData || [];
+  const assignments = assignmentsData || [];
+
+  const quizzesById = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+
+  const assignmentsWithQuizzes = assignments.map((assignment) => ({
+    ...assignment,
+    quizzes: quizzesById.get(assignment.quiz_id),
+  }));
 
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
@@ -73,10 +83,10 @@ export default async function AssignmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {assignments?.map((assignment) => (
+              {assignmentsWithQuizzes?.map((assignment) => (
                 <TableRow key={assignment.id}>
                   <TableCell className="font-medium">{assignment.user_email}</TableCell>
-                  <TableCell>{assignment.quizzes.exam_name} - {assignment.quizzes.quiz_name}</TableCell>
+                  <TableCell>{assignment.quizzes ? `${assignment.quizzes.exam_name} - ${assignment.quizzes.quiz_name}` : 'Quiz not found'}</TableCell>
                   <TableCell className="text-center">
                     <Badge variant={getStatusVariant(assignment.status)}>{assignment.status}</Badge>
                   </TableCell>
