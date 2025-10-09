@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function assignQuiz(formData: FormData) {
+  'use server';
   const supabase = await createClient();
   const email = formData.get('email') as string;
   const quizId = formData.get('quiz_id') as string;
@@ -28,11 +29,13 @@ export async function assignQuiz(formData: FormData) {
 }
 
 export async function allowResume() {
+  'use server';
   // No changes needed for allow resume, as the user can just continue
   // from where they left off.
 }
 
 export async function freshReassign(assignmentId: string) {
+  'use server';
   const supabase = await createClient();
 
   const { data: oldAssignment } = await supabase
